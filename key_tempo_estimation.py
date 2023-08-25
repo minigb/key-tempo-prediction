@@ -15,32 +15,31 @@ def main():
     args = parser.parse_args()
 
     in_dir = args.in_dir
-    if not args.out_dir:
-        args.out_dir = os.path.abspath(f'{in_dir}/../gtzan-label')
+    out_dir = args.out_dir if args.out_dir else os.path.abspath(f'{in_dir}/../gtzan-label')
 
-    if args.force and os.path.exists(args.out_dir):
-        shutil.rmtree(args.out_dir)
+    if os.path.exists(out_dir) and not args.force:
+        print(f'Result already exists at {out_dir}')
+        return
+    
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+    os.makedirs(out_dir, exist_ok = True)
+    
+    # Get all the audio files in the directory
+    for root, _, files in os.walk(in_dir):
+        wav_files = []
+        for file_name in files:
+            if file_name.lower().endswith('.wav'):
+                file_path = os.path.join(root, file_name)
+                wav_files.append(file_path)
 
-    if not os.path.exists(args.out_dir):
-        # Get all the audio files in the directory
-        for root, _, files in os.walk(in_dir):
-            dir_name = os.path.basename(root)
-            wav_files = []
-            for file_name in files:
-                if file_name.lower().endswith('.wav'):
-                    file_path = os.path.join(root, file_name)
-                    wav_files.append(file_path)
+        if not len(wav_files):
+            continue
 
-            if not len(wav_files):
-                continue
-
-            result_dir = f'{args.out_dir}/{dir_name}'
-            os.makedirs(result_dir, exist_ok = True)
-            if len(wav_files):
-                # Run executable files
-                for exec in [KEY_EXEC, TEMPO_EXEC]:
-                    command = [exec, 'batch'] + wav_files + ['-o', result_dir]
-                    subprocess.run(command)
+        # Run executable files
+        for exec in [KEY_EXEC, TEMPO_EXEC]:
+            command = [exec, 'batch'] + wav_files + ['-o', out_dir]
+            subprocess.run(command)
 
 if __name__ == "__main__":
     main()
