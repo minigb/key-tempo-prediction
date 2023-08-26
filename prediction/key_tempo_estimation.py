@@ -10,6 +10,7 @@ GTZAN_AUDIO_PATH = f'{DATASET_PATH}/gtzan-audio'
 GTZAN_LABEL_PATH = os.path.abspath('../gtzan-label')
 EXEC = {'key' : 'KeyRecognition',
         'tempo' : 'TCNTempoDetector'}
+AUDIO_FILE_TYPE = ['wav', 'mp3', 'flac']
 
 def main():
     parser = argparse.ArgumentParser()
@@ -32,13 +33,16 @@ def main():
         assert target in EXEC.keys(), f'Unable to predict {target}. Only {list(EXEC.keys())} are available'
 
     # Get all of the audio files in the input directory
-    wav_files = []
+    audio_files = []
     for root, _, files in os.walk(input_dir):
         for file_name in files:
-            if file_name.lower().endswith('.wav'):
-                file_path = os.path.join(root, file_name)
-                wav_files.append(file_path)
-    if not len(wav_files):
+            for file_type in AUDIO_FILE_TYPE:
+                if file_name.lower().endswith(f'.{file_type}'):
+                    file_path = os.path.join(root, file_name)
+                    audio_files.append(file_path)
+    print(f'Found {len(audio_files)} audio files')
+
+    if not len(audio_files):
         return
 
     # Run executable files to predict
@@ -55,7 +59,7 @@ def main():
                 continue
 
         os.makedirs(target_dir)
-        command = [EXEC[target], 'batch'] + wav_files + ['-o', target_dir]
+        command = [EXEC[target], 'batch'] + audio_files + ['-o', target_dir]
         subprocess.run(command)
         print('Done')
 
