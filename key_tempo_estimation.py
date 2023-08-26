@@ -3,43 +3,55 @@ import subprocess
 import os
 import shutil
 
-KEY_EXEC = 'TCNTempoDetector'
-TEMPO_EXEC = 'KeyRecognition'
+EXEC = {'key' : 'KeyRecognition',
+        'tempo' : 'TCNTempoDetector'}
 
 def main():
-    # Get file directory
     parser = argparse.ArgumentParser()
-    parser.add_argument("in_dir", help = "Path to the directory with audio files")
-    parser.add_argument("-o", "--out_dir", type = str, default = None, help = "Path to the directory to save labeling result")
-    parser.add_argument('-f', '--force', action = 'store_true')
+    parser.add_argument("input_dir", help = "Path to the directory with audio files")
+    parser.add_argument("-t", "--target_list", nargs = '+', default = None, help = "Things to estimate")
+    parser.add_argument("-o", "--output_dir", default = None, help = "Path to the directory to save labeling result")
+    parser.add_argument('-f', '--force', action = 'store_true', help = "Whether to force the execution even if the result exists")
     args = parser.parse_args()
 
-    in_dir = args.in_dir
-    out_dir = args.out_dir if args.out_dir else os.path.abspath(f'{in_dir}/../gtzan-label')
+    # input dir
+    input_dir = args.input_dir
 
-    if os.path.exists(out_dir) and not args.force:
-        print(f'Result already exists at {out_dir}')
-        return
-    
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    os.makedirs(out_dir, exist_ok = True)
-    
-    # Get all the audio files in the directory
-    for root, _, files in os.walk(in_dir):
-        wav_files = []
+    # output dir
+    output_dir = args.output_dir if args.output_dir else os.path.abspath(f'{input_dir}/../gtzan-label')
+
+    # targets
+    target_list = args.target_list if args.target_list else list(EXEC.keys())
+    for target in target_list:
+        assert target in EXEC.keys(), f'Unable to predict {target}. Only {list(EXEC.keys())} are available'
+
+    # Get all of the audio files in the input directory
+    wav_files = []
+    for root, _, files in os.walk(input_dir):
         for file_name in files:
             if file_name.lower().endswith('.wav'):
                 file_path = os.path.join(root, file_name)
                 wav_files.append(file_path)
+    if not len(wav_files):
+        return
 
-        if not len(wav_files):
-            continue
+    # Run executable files to predict
+    for target in target_list:
+        print('-' * 10)
+        print(target)
 
-        # Run executable files
-        for exec in [KEY_EXEC, TEMPO_EXEC]:
-            command = [exec, 'batch'] + wav_files + ['-o', out_dir]
-            subprocess.run(command)
+        target_dir = f'{output_dir}/{target}'
+        if os.path.exists(target_dir):
+            if args.force:
+                shutil.rmtree(target_dir) # remove existing directory
+            else:
+                print(f'Result already exists in {target_dir}')
+                continue
+
+        os.makedirs(target_dir)
+        command = [EXEC[target], 'batch'] + wav_files + ['-o', target_dir]
+        subprocess.run(command)
+        print('Done')
 
 if __name__ == "__main__":
     main()
