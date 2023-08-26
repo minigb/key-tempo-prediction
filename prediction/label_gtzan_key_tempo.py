@@ -3,6 +3,12 @@ import pandas as pd
 import os
 import argparse
 
+# TODO(minigb): Create an additional file for constants
+# TODO(minigb): This is assuming that you are in the same directory with this file.
+DATASET_PATH = os.path.abspath('../dataset')
+GTZAN_AUDIO_PATH = f'{DATASET_PATH}/gtzan-audio'
+GTZAN_LABEL_PATH = os.path.abspath('../gtzan-label')
+
 # helper function
 def get_trackid_and_value(root, file_name):
     # Get track_id
@@ -21,11 +27,11 @@ def main():
     parser.add_argument("-i", "--in_dir", default = None, help = "Path to the directory to save labeling result")
     parser.add_argument("-o", "--out_dir", default = None, help = "Path to the directory to save labeling result")
     args = parser.parse_args()
-    in_dir = args.in_dir if args.in_dir else 'dataset/gtzan-label/'
-    out_dir = args.out_dir if args.out_dir else 'dataset'
+    in_dir = args.in_dir if args.in_dir else GTZAN_LABEL_PATH
+    out_dir = args.out_dir if args.out_dir else GTZAN_LABEL_PATH
 
     # Get base gtzan-bind
-    dataset = load_dataset('seungheondoh/gtzan-bind')
+    dataset = load_dataset(f'{DATASET_PATH}/seungheondoh/gtzan-bind')
     assert len(dataset.keys()) == 1, f'Only one dataframe is needed'
     base_df = pd.DataFrame.from_dict(list(dataset.values())[0])
 

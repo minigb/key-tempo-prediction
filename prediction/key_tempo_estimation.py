@@ -3,22 +3,28 @@ import subprocess
 import os
 import shutil
 
+# TODO(minigb): Create an additional file for constants
+# TODO(minigb): This is assuming that you are in the same directory with this file
+DATASET_PATH = os.path.abspath('../dataset')
+GTZAN_AUDIO_PATH = f'{DATASET_PATH}/gtzan-audio'
+GTZAN_LABEL_PATH = os.path.abspath('../gtzan-label')
 EXEC = {'key' : 'KeyRecognition',
         'tempo' : 'TCNTempoDetector'}
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("input_dir", help = "Path to the directory with audio files")
-    parser.add_argument("-t", "--target_list", nargs = '+', default = None, help = "Things to estimate")
+    parser.add_argument("-i", "--input_dir", default = None, help = "Path to the directory with audio files")
     parser.add_argument("-o", "--output_dir", default = None, help = "Path to the directory to save labeling result")
+    parser.add_argument("-t", "--target_list", nargs = '+', default = None, help = "Things to estimate")
     parser.add_argument('-f', '--force', action = 'store_true', help = "Whether to force the execution even if the result exists")
     args = parser.parse_args()
 
     # input dir
-    input_dir = args.input_dir
+    input_dir = args.input_dir if args.input_dir else GTZAN_AUDIO_PATH
+    assert os.path.exists(input_dir), f'{input_dir} does not exist'
 
     # output dir
-    output_dir = args.output_dir if args.output_dir else os.path.abspath(f'{input_dir}/../../gtzan-label')
+    output_dir = args.output_dir if args.output_dir else GTZAN_LABEL_PATH
 
     # targets
     target_list = args.target_list if args.target_list else list(EXEC.keys())
