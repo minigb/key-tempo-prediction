@@ -18,7 +18,7 @@ def main():
     input_dir = args.input_dir
 
     # output dir
-    output_dir = args.output_dir if args.output_dir else os.path.abspath(f'{input_dir}/../gtzan-label')
+    output_dir = args.output_dir if args.output_dir else os.path.abspath(f'{input_dir}/../../gtzan-label')
 
     # targets
     target_list = args.target_list if args.target_list else list(EXEC.keys())
